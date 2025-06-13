@@ -90,9 +90,8 @@ var updateStatus = function() {
   }
 
   // Remove previous king-in-check highlight unless checkmate (handled below)
-  if (!game.in_checkmate()) {
-    $('.king-in-check').removeClass('king-in-check');
-  }
+  $('.king-in-check').removeClass('king-in-check');
+  $('.square-king-in-check').removeClass('square-king-in-check');
 
   // checkmate?
   if (game.in_checkmate() === true) {
@@ -112,7 +111,7 @@ var updateStatus = function() {
       }
     }
     if (kingSquare) {
-      $('.square-' + kingSquare).addClass('king-in-check');
+      $('.square-' + kingSquare).addClass('king-in-check square-king-in-check');
     }
   }
 
@@ -143,7 +142,7 @@ var updateStatus = function() {
         }
       }
       if (kingSquare) {
-        $('.square-' + kingSquare).addClass('king-in-check');
+        $('.square-' + kingSquare).addClass('king-in-check square-king-in-check');
       }
     }
   }
