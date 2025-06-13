@@ -1,0 +1,113 @@
+;(function() {
+function validMove(move) {
+function validSquare(square) {
+function validPieceCode(code) {
+function validFen(fen) {
+function validPositionObject(pos) {
+function fenToPieceCode(piece) {
+function pieceCodeToFen(piece) {
+function fenToObj(fen) {
+function objToFen(obj) {
+window['ChessBoard'] = window['ChessBoard'] || function(containerElOrId, cfg) {
+function createId() {
+  return 'xxxx-xxxx-xxxx-xxxx-xxxx-xxxx-xxxx-xxxx'.replace(/x/g, function(c) {
+function deepCopy(thing) {
+function parseSemVer(version) {
+function compareSemVer(version, minimum) {
+function error(code, msg, obj) {
+      typeof console.log === 'function') {
+  // custom function
+  if (typeof cfg.showErrors === 'function') {
+function checkDeps() {
+      typeof JSON.stringify !== 'function' ||
+      typeof JSON.parse !== 'function') {
+function validAnimationSpeed(speed) {
+function expandConfig() {
+       typeof cfg.pieceTheme !== 'function')) {
+function calculateSquareSize() {
+function createElIds() {
+function buildBoardContainer() {
+var buildSquare = function(color, size, id) {
+function buildBoard(orientation) {
+function buildPieceImgSrc(piece) {
+  if (typeof cfg.pieceTheme === 'function') {
+function buildPiece(piece, hidden, id) {
+function buildSparePieces(color) {
+function animateSquareToSquare(src, dest, piece, completeFn) {
+  var complete = function() {
+    // run complete function
+    if (typeof completeFn === 'function') {
+function animateSparePieceToSquare(piece, dest, completeFn) {
+  var complete = function() {
+    // run complete function
+    if (typeof completeFn === 'function') {
+function doAnimations(a, oldPos, newPos) {
+  function onFinish() {
+    // run their onMoveEnd function
+      typeof cfg.onMoveEnd === 'function') {
+function squareDistance(s1, s2) {
+function createRadius(square) {
+  squares.sort(function(a, b) {
+function findClosestPiece(position, piece, square) {
+function calculateAnimations(pos1, pos2) {
+function drawPositionInstant() {
+function drawBoard() {
+function calculatePositionFromMoves(position, moves) {
+function setCurrentPosition(position) {
+  // run their onChange function
+    typeof cfg.onChange === 'function') {
+function isXYOnSquare(x, y) {
+function captureSquareOffsets() {
+function removeSquareHighlights() {
+function snapbackDraggedPiece() {
+  function complete() {
+    // run their onSnapbackEnd function
+      typeof cfg.onSnapbackEnd === 'function') {
+function trashDraggedPiece() {
+function dropDraggedPieceOnSquare(square) {
+  var complete = function() {
+    // execute their onSnapEnd function
+      typeof cfg.onSnapEnd === 'function') {
+function beginDraggingPiece(source, piece, x, y) {
+  // run their custom onDragStart function
+  // their custom onDragStart function can cancel drag start
+  if (typeof cfg.onDragStart === 'function' &&
+function updateDraggedPiece(x, y) {
+  if (typeof cfg.onDragMove === 'function') {
+function stopDraggedPiece(location) {
+  // run their onDrop function, which can potentially change the drop action
+    typeof cfg.onDrop === 'function') {
+widget.clear = function(useAnimation) {
+widget.config = function(arg1, arg2) {
+widget.destroy = function() {
+widget.fen = function() {
+widget.flip = function() {
+widget.highlight = function() {
+widget.move = function() {
+    // any "false" to this function means no animations
+widget.orientation = function(arg) {
+widget.position = function(position, useAnimation) {
+widget.resize = function() {
+widget.start = function(useAnimation) {
+function isTouchDevice() {
+function isMSIE() {
+function stopDefault(e) {
+function mousedownSquare(e) {
+function touchstartSquare(e) {
+function mousedownSparePiece(e) {
+function touchstartSparePiece(e) {
+function mousemoveWindow(e) {
+function touchmoveWindow(e) {
+function mouseupWindow(e) {
+function touchendWindow(e) {
+function mouseenterSquare(e) {
+    typeof cfg.onMouseoverSquare !== 'function') return;
+  // execute their function
+function mouseleaveSquare(e) {
+    typeof cfg.onMouseoutSquare !== 'function') return;
+  // execute their function
+function addEvents() {
+    document.ondragstart = function() { return false; };
+function initDom() {
+function init() {
+// expose util functions
