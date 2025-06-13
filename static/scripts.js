@@ -36,6 +36,51 @@ var onSnapEnd = function() {
     board.position(game.fen());
 };
 
+// Utility: Map FEN piece letter to image filename
+function getPieceImg(piece) {
+    var base = '/static/libs/chessboard/img/chesspieces/wikipedia/';
+    var color = (piece === piece.toUpperCase()) ? 'w' : 'b';
+    var pieceLetter = piece.toUpperCase();
+    return base + color + pieceLetter + '.png';
+}
+
+// Display captured pieces: defeated black pieces at white side (bottom), defeated white pieces at black side (top)
+function displayCapturedRows() {
+    var history = game.history({ verbose: true });
+    var whiteCaptured = [];
+    var blackCaptured = [];
+
+    history.forEach(function(move) {
+        if (move.captured) {
+            if (move.color === 'w') {
+                // White captured black piece
+                blackCaptured.push(move.captured);
+            } else {
+                // Black captured white piece
+                whiteCaptured.push(move.captured.toUpperCase());
+            }
+        }
+    });
+
+    // Render captured white pieces (defeated white, show at top/black side)
+    var $capturedBlack = $('#captured-black');
+    $capturedBlack.empty();
+    whiteCaptured.forEach(function(piece) {
+        $capturedBlack.append(
+            '<img class="captured-piece-img" src="' + getPieceImg(piece) + '" alt="' + piece + '">'
+        );
+    });
+
+    // Render captured black pieces (defeated black, show at bottom/white side)
+    var $capturedWhite = $('#captured-white');
+    $capturedWhite.empty();
+    blackCaptured.forEach(function(piece) {
+        $capturedWhite.append(
+            '<img class="captured-piece-img" src="' + getPieceImg(piece) + '" alt="' + piece + '">'
+        );
+    });
+}
+
 var updateStatus = function() {
   var status = '';
 
@@ -107,6 +152,7 @@ var updateStatus = function() {
   getLastCapture();
   createTable();
   updateScroll();
+  displayCapturedRows();
 
   statusEl.html(status);
   fenEl.html(game.fen());
@@ -214,8 +260,9 @@ var takeBack = function() {
 var newGame = function() {
     game.reset();
     board.start();
-    // Remove any king-in-check highlight on new game
     $('.king-in-check').removeClass('king-in-check');
+    $('#captured-white').empty();
+    $('#captured-black').empty();
     updateStatus();
 }
 
