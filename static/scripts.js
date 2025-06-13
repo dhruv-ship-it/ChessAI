@@ -44,9 +44,31 @@ var updateStatus = function() {
     moveColor = 'Black';
   }
 
+  // Remove previous king-in-check highlight unless checkmate (handled below)
+  if (!game.in_checkmate()) {
+    $('.king-in-check').removeClass('king-in-check');
+  }
+
   // checkmate?
   if (game.in_checkmate() === true) {
     status = 'Game over, ' + moveColor + ' is in checkmate.';
+
+    // Highlight the checkmated king permanently
+    var turn = game.turn();
+    var boardObj = board.position();
+    var kingSquare = null;
+    for (var sq in boardObj) {
+      if (
+        (turn === 'w' && boardObj[sq] === 'wK') ||
+        (turn === 'b' && boardObj[sq] === 'bK')
+      ) {
+        kingSquare = sq;
+        break;
+      }
+    }
+    if (kingSquare) {
+      $('.square-' + kingSquare).addClass('king-in-check');
+    }
   }
 
   // draw?
@@ -61,6 +83,23 @@ var updateStatus = function() {
     // check?
     if (game.in_check() === true) {
       status += ', ' + moveColor + ' is in check';
+
+      // Highlight the king in check
+      var turn = game.turn();
+      var boardObj = board.position();
+      var kingSquare = null;
+      for (var sq in boardObj) {
+        if (
+          (turn === 'w' && boardObj[sq] === 'wK') ||
+          (turn === 'b' && boardObj[sq] === 'bK')
+        ) {
+          kingSquare = sq;
+          break;
+        }
+      }
+      if (kingSquare) {
+        $('.square-' + kingSquare).addClass('king-in-check');
+      }
     }
   }
 
@@ -175,6 +214,8 @@ var takeBack = function() {
 var newGame = function() {
     game.reset();
     board.start();
+    // Remove any king-in-check highlight on new game
+    $('.king-in-check').removeClass('king-in-check');
     updateStatus();
 }
 
