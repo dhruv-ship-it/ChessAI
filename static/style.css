@@ -1,6 +1,13 @@
 body {
     padding-top: 0;
     align-items: center;
+    background: linear-gradient(135deg, #e0e0e0 0%, #888 100%);
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    margin: 0;
 }
 
 #board {
@@ -39,6 +46,11 @@ body {
     max-width: 800px;
     margin: 10px;
     min-height: 370px;
+    background: transparent !important;
+    /* border-radius: 18px; */
+    /* border: 2.5px solid #388E5C; */
+    /* box-shadow: 0 6px 32px 0 rgba(56,142,92,0.10), 0 2px 8px rgba(0,0,0,0.10); */
+    padding: 24px 16px 80px 16px;
 }
 
 #moveTable {
