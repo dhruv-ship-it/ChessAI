@@ -1,5 +1,5 @@
 body {
-    padding-top: 70px;
+    padding-top: 0;
     align-items: center;
 }
 
@@ -11,13 +11,28 @@ body {
     min-width: 300px;
 }
 
-.navbar {
-    background-color: red;
-}
+
 
 #logo {
     position: relative;
-    left: 10%;
+    left: 0;
+    padding-top: 0;
+    font-weight: 900;
+    font-size: 2.6rem;
+    color: #145a1a;
+    font-family: 'Segoe UI', 'Arial Black', 'Arial', sans-serif;
+    letter-spacing: 2px;
+    text-shadow: none;
+    text-align: center;
+    -webkit-text-stroke: 2px #000;
+    text-stroke: 2px #000;
+
+    display: flex;
+    align-items: center;
+    height: 84px;
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
 }
 
 #secondWindow {
@@ -28,11 +43,357 @@ body {
 
 #moveTable {
     width: 100%;
+    max-width: 100%;
+    min-width: 340px;
+    height: 250px; /* Match max-height to avoid overflow */
     max-height: 250px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 2px solid #388E5C;
+    box-shadow: 0 4px 18px rgba(56, 142, 92, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+    background: #f6fff6;
+    position: relative;
+    z-index: 2; /* Ensure table is above controls */
+    margin-bottom: 0; /* Remove extra space below table */
+    display: inline-block;
+    vertical-align: top;
 }
 
 #controls {
-    position: absolute;
-    bottom: 0;
+    position: static;
+    background: none;
+    border: none;
+    padding: 0;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-left: 18px;
+    vertical-align: top;
+}
+
+#controls .row.g-2,
+#controls form {
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+}
+
+#controls .d-flex.gap-2 {
+    flex-wrap: nowrap;
+    gap: 1rem !important;
+    margin-bottom: 0.5rem;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+}
+
+#controls .btn-chess-lightgreen,
+#controls .form-select.chess-select {
+    min-width: 140px;
+    margin-bottom: 0.5rem;
+    flex: 1 1 140px;
+    width: 100%;
+}
+
+#controls .form-select.chess-select {
+    margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+    .row.align-items-start {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+    }
+    #mainWindow {
+        flex: 0 0 auto;
+        margin-right: 32px;
+    }
+    #secondWindow {
+        flex: 1 1 0;
+        min-width: 1020px;
+        max-width: 500px;
+        margin-left: 0;
+        margin-right: 0;
+        position: relative;
+    }
+    #moveTable {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    #secondWindow-content {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 40px;
+        width: 100%;
+        box-sizing: border-box;
+        /* Prevent children from overflowing */
+        /* overflow-x: auto; */
+    }
+    #moveTable {
+        flex: 2 1 0;
+        min-width: 220px;
+        max-width: 480px;
+        /* Prevent table from growing too wide */
+        box-sizing: border-box;
+    }
+    #controls {
+        flex: 1 1 0;
+        min-width: 180px;
+        max-width: 340px;
+        margin-left: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        background: none;
+        border: none;
+        padding: 0;
+        position: static !important;
+        z-index: auto;
+        box-sizing: border-box;
+        /* Prevent controls from overflowing parent */
+        /* overflow-x: auto; */
+        word-break: break-word;
+    }
+}
+
+#mainWindow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#board {
+    margin: 0 auto;
+    /* ...existing code... */
+}
+
+#secondWindow {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding: 24px 16px 80px 16px;
+    /* ...existing code... */
+}
+
+#controls {
+    position: static !important;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Remove/override any absolute positioning for #controls from previous rules */
+#controls {
+    position: static !important;
+}
+
+@media (max-width: 767.98px) {
+    #mainWindow, #secondWindow {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    #secondWindow {
+        position: static;
+        box-shadow: none;
+        padding: 16px 0 80px 0;
+    }
+    #controls {
+        position: static;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+}
+
+@media (min-width: 992px) {
+    .row.align-items-start {
+        justify-content: center;
+    }
+    #mainWindow {
+        margin-left: 40px;
+        margin-right: 40px;
+    }
+    #secondWindow {
+        margin-left: 48px;
+        max-width: 420px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .row.align-items-start {
+        justify-content: flex-start;
+    }
+    #mainWindow {
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+    #secondWindow {
+        margin-left: 32px;
+        max-width: 480px;
+    }
+}
+
+/* Bold, light green button styles */
+.btn-chess-lightgreen {
+    background: linear-gradient(180deg, #4CAF7A 0%, #388E5C 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(56, 142, 92, 0.15), 0 2px 4px rgba(0,0,0,0.08);
+    padding: 0.7rem 1.8rem;
+    transition: transform 0.08s, box-shadow 0.08s, background 0.15s;
+    letter-spacing: 0.5px;
+    font-size: 1.08rem;
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
+}
+.btn-chess-lightgreen:hover, .btn-chess-lightgreen:focus {
+    background: linear-gradient(180deg, #6fd6a6 0%, #388E5C 100%);
+    color: #fff;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 18px rgba(56, 142, 92, 0.18), 0 2px 8px rgba(0,0,0,0.10);
+}
+
+/* Dropdown styled like the buttons */
+.form-select.chess-select {
+    background: linear-gradient(180deg, #4CAF7A 0%, #388E5C 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(56, 142, 92, 0.10), 0 2px 4px rgba(0,0,0,0.06);
+    padding: 0.7rem 1.8rem;
+    font-size: 1.08rem;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: box-shadow 0.08s, background 0.15s;
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
+}
+.form-select.chess-select:focus {
+    background: linear-gradient(180deg, #6fd6a6 0%, #388E5C 100%);
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(56,142,92,.15);
+}
+
+/* Make dropdown options visible with white text and dark green background */
+.form-select.chess-select,
+.form-select.chess-select option {
+    background: linear-gradient(180deg, #4CAF7A 0%, #388E5C 100%);
+    color: #fff !important;
+}
+
+/* For some browsers, force color for dropdown options */
+.form-select.chess-select:focus option,
+.form-select.chess-select option:checked {
+    background: #388E5C !important;
+    color: #fff !important;
+}
+
+/* Ensure dropdown and buttons have spacing between them */
+#controls .col-12 {
+    margin-bottom: 0.5rem;
+}
+
+/* Keep buttons side by side with proper spacing and allow wrapping if needed */
+#controls .d-flex.gap-2 {
+    flex-wrap: wrap;
+    gap: 1rem !important;
+    justify-content: flex-start;
+    width: 100%;
+    min-width: 320px;
+    max-width: 100%;
+}
+
+/* Ensure buttons take up enough space and don't overlap */
+#controls .btn-chess-lightgreen {
+    min-width: 160px;
+    margin-bottom: 0.5rem;
+    flex: 1 1 160px;
+}
+
+/* Wider table for better visibility */
+#moveTable {
+    width: 100%;
+    max-width: 100%;
+    min-width: 340px;
+    height: 250px; /* Match max-height to avoid overflow */
+    max-height: 250px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 2px solid #388E5C;
+    box-shadow: 0 4px 18px rgba(56, 142, 92, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+    background: #f6fff6;
+    position: relative;
+    z-index: 2; /* Ensure table is above controls */
+    margin-bottom: 0; /* Remove extra space below table */
+}
+#moveTable table {
+    min-width: 320px;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #f6fff6;
+}
+
+#moveTable th, #moveTable td {
+    border: 1px solid #388E5C;
+    background: #7E8C88;
+}
+
+#moveTable th {
+    background: #388E5C;
+    color: #fff;
+    font-weight: bold;
+    border-bottom: 2px solid #388E5C;
+}
+
+/* Make sure controls and table shrink if needed */
+@media (max-width: 1100px) {
+    #secondWindow {
+        max-width: 98vw;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    #secondWindow-content {
+        gap: 20px;
+    }
+    #moveTable {
+        max-width: 340px;
+    }
+    #controls {
+        max-width: 180px;
+    }
+}
+
+/* On small screens, stack vertically */
+@media (max-width: 767.98px) {
+    #secondWindow-content {
+        flex-direction: column;
+        gap: 16px;
+        overflow-x: visible;
+    }
+    #moveTable,
+    #controls {
+        max-width: 100%;
+        min-width: 0;
+    }
 }
