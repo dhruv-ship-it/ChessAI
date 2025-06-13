@@ -62,8 +62,8 @@ body {
     overflow-y: auto;
     overflow-x: auto;
     border-radius: 12px;
-    border: 2px solid #388E5C;
-    box-shadow: 0 4px 18px rgba(56, 142, 92, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+    border: 2px solid #3E5C76;
+    box-shadow: 0 4px 18px rgba(62, 92, 118, 0.18), 0 2px 8px rgba(0,0,0,0.08);
     background: #f6fff6;
     position: relative;
     z-index: 2; /* Ensure table is above controls */
@@ -252,14 +252,14 @@ body {
     }
 }
 
-/* Bold, light green button styles */
+/* Bold, blue button styles */
 .btn-chess-lightgreen {
-    background: linear-gradient(180deg, #4CAF7A 0%, #388E5C 100%);
+    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
     color: #fff;
     border: none;
     border-radius: 8px;
     font-weight: bold;
-    box-shadow: 0 4px 12px rgba(56, 142, 92, 0.15), 0 2px 4px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(62, 92, 118, 0.15), 0 2px 4px rgba(0,0,0,0.08);
     padding: 0.7rem 1.8rem;
     transition: transform 0.08s, box-shadow 0.08s, background 0.15s;
     letter-spacing: 0.5px;
@@ -271,20 +271,20 @@ body {
          1px  1px 0 #000;
 }
 .btn-chess-lightgreen:hover, .btn-chess-lightgreen:focus {
-    background: linear-gradient(180deg, #6fd6a6 0%, #388E5C 100%);
-    color: #fff;
+    background: linear-gradient(180deg, #A8DADC 0%, #3E5C76 100%);
+    color: #222;
     transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 6px 18px rgba(56, 142, 92, 0.18), 0 2px 8px rgba(0,0,0,0.10);
+    box-shadow: 0 6px 18px rgba(62, 92, 118, 0.18), 0 2px 8px rgba(0,0,0,0.10);
 }
 
 /* Dropdown styled like the buttons */
 .form-select.chess-select {
-    background: linear-gradient(180deg, #4CAF7A 0%, #388E5C 100%);
+    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
     color: #fff;
     border: none;
     border-radius: 8px;
     font-weight: bold;
-    box-shadow: 0 4px 12px rgba(56, 142, 92, 0.10), 0 2px 4px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 12px rgba(62, 92, 118, 0.10), 0 2px 4px rgba(0,0,0,0.06);
     padding: 0.7rem 1.8rem;
     font-size: 1.08rem;
     letter-spacing: 0.5px;
@@ -297,24 +297,23 @@ body {
         -1px  1px 0 #000,
          1px  1px 0 #000;
 }
-.form-select.chess-select:focus {
-    background: linear-gradient(180deg, #6fd6a6 0%, #388E5C 100%);
-    color: #fff;
-    box-shadow: 0 0 0 0.2rem rgba(56,142,92,.15);
+.form-select.chess-select:focus,
+.form-select.chess-select:hover {
+    background: linear-gradient(180deg, #A8DADC 0%, #3E5C76 100%);
+    color: #222;
+    box-shadow: 0 0 0 0.2rem rgba(62,92,118,.15);
 }
 
-/* Make dropdown options visible with white text and dark green background */
+/* Make dropdown options visible with white text and blue background */
 .form-select.chess-select,
 .form-select.chess-select option {
-    background: linear-gradient(180deg, #4CAF7A 0%, #388E5C 100%);
+    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
     color: #fff !important;
 }
-
-/* For some browsers, force color for dropdown options */
 .form-select.chess-select:focus option,
 .form-select.chess-select option:checked {
-    background: #388E5C !important;
-    color: #fff !important;
+    background: #A8DADC !important;
+    color: #222 !important;
 }
 
 /* Ensure dropdown and buttons have spacing between them */
@@ -349,8 +348,8 @@ body {
     overflow-y: auto;
     overflow-x: auto;
     border-radius: 12px;
-    border: 2px solid #388E5C;
-    box-shadow: 0 4px 18px rgba(56, 142, 92, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+    border: 2px solid #3E5C76;
+    box-shadow: 0 4px 18px rgba(62, 92, 118, 0.18), 0 2px 8px rgba(0,0,0,0.08);
     background: #f6fff6;
     position: relative;
     z-index: 2; /* Ensure table is above controls */
@@ -367,15 +366,21 @@ body {
 }
 
 #moveTable th, #moveTable td {
-    border: 1px solid #388E5C;
-    background: #7E8C88;
+    border: 1px solid #3E5C76;
+    background: #A8DADC;
+    color: #222;
 }
 
 #moveTable th {
-    background: #388E5C;
+    background: #3E5C76;
     color: #fff;
     font-weight: bold;
-    border-bottom: 2px solid #388E5C;
+    border-bottom: 2px solid #3E5C76;
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
 }
 
 /* Make sure controls and table shrink if needed */
@@ -410,6 +415,69 @@ body {
     }
 }
 
+/* Chessboard skin classes */
+#board.skin-greenwhite .white-1e1d7 {
+    background-color: #bce7bc !important;
+}
+#board.skin-greenwhite .black-3c85d {
+    background-color: #286341 !important;
+}
+#board.skin-redwhite .white-1e1d7 {
+    background-color: #f1d1d1 !important;
+}
+#board.skin-redwhite .black-3c85d {
+    background-color: #7b2d25 !important;
+}
+#board.skin-bluewhite .white-1e1d7 {
+    background-color: #d3e2f0 !important;
+}
+#board.skin-bluewhite .black-3c85d {
+    background-color: #3E5C76 !important;
+}
+#board.skin-brownwhite .white-1e1d7 {
+    background-color: #f7e3c3 !important;
+}
+#board.skin-brownwhite .black-3c85d {
+    background-color: #ab7e59 !important;
+}
+
+/* Style the navbar skin dropdown like the other controls */
+#boardSkinSelect.form-select.chess-select {
+    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(62, 92, 118, 0.10), 0 2px 4px rgba(0,0,0,0.06);
+    padding: 0.7rem 1.8rem;
+    font-size: 1.08rem;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: box-shadow 0.08s, background 0.15s;
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
+}
+#boardSkinSelect.form-select.chess-select:focus,
+#boardSkinSelect.form-select.chess-select:hover {
+    background: linear-gradient(180deg, #A8DADC 0%, #3E5C76 100%);
+    color: #222;
+    box-shadow: 0 0 0 0.2rem rgba(62,92,118,.15);
+}
+#boardSkinSelect.form-select.chess-select,
+#boardSkinSelect.form-select.chess-select option {
+    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
+    color: #fff !important;
+}
+#boardSkinSelect.form-select.chess-select:focus option,
+#boardSkinSelect.form-select.chess-select option:checked {
+    background: #A8DADC !important;
+    color: #222 !important;
+}
+
 .king-in-check {
     box-shadow: 0 0 0 4px #e53935, 0 0 16px 8px #e57373;
     background: #e57373 !important;
@@ -435,6 +503,23 @@ body {
     margin: 0 4px;
     filter: drop-shadow(0 1px 2px #222);
     opacity: 0.95;
+}
+
+#status {
+    display: block;
+    color: #fff;
+    font-size: 1.2rem;
+    font-family: 'Segoe UI', 'Arial Black', 'Arial', sans-serif;
+    font-weight: 500;
+    letter-spacing: 2px;
+    /* text-align: center; */
+    /* text-transform: uppercase; */
+    margin: 0 auto 18px auto;
+    text-shadow:
+        -2px -2px 0 #000,
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000;
 }
 
 

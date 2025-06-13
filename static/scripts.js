@@ -123,7 +123,7 @@ var updateStatus = function() {
 
   // game still on
   else {
-    status = moveColor + ' to move';
+    status = moveColor + ' To Move';
 
     // check?
     if (game.in_check() === true) {
