@@ -8,6 +8,10 @@ var board,
 // do not pick up pieces if the game is over
 // only pick up pieces for the side to move
 var onDragStart = function(source, piece, position, orientation) {
+  // Prevent move if timeout/game ended
+  if (timerEnded) {
+    return false;
+  }
   if (game.game_over() === true ||
       (game.turn() === 'w' && piece.search(/^b/) !== -1) ||
       (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
@@ -16,6 +20,10 @@ var onDragStart = function(source, piece, position, orientation) {
 };
 
 var onDrop = function(source, target) {
+  // Prevent move if timeout/game ended
+  if (timerEnded) {
+    return 'snapback';
+  }
   // see if the move is legal
   var move = game.move({
     from: source,
@@ -25,6 +33,17 @@ var onDrop = function(source, target) {
 
   // illegal move
   if (move === null) return 'snapback';
+
+  // Start timer only after white's first move
+  if (!timerStarted) {
+      if (move.color === 'w') {
+          timerStarted = true;
+          startTimerFor('b');
+      }
+  } else {
+      // Normal timer switching
+      startTimerFor(game.turn());
+  }
 
   updateStatus();
   getResponseMove();
@@ -80,6 +99,115 @@ function displayCapturedRows() {
         );
     });
 }
+
+// Timer logic
+var timerSeconds = 60;
+var timerWhite = timerSeconds;
+var timerBlack = timerSeconds;
+var timerInterval = null;
+var timerActive = null; // 'w' or 'b'
+var timerEnded = false;
+var timerStarted = false; // <-- NEW: track if timer has started
+
+function resetTimers(seconds) {
+    timerWhite = seconds;
+    timerBlack = seconds;
+    timerEnded = false;
+    timerStarted = false;
+    updateTimerDisplays();
+}
+
+function updateTimerDisplays() {
+    $('#countdown-white').text(timerWhite);
+    $('#countdown-black').text(timerBlack);
+    $('#countdown-white').removeClass('timer-active timer-ended');
+    $('#countdown-black').removeClass('timer-active timer-ended');
+    if (timerEnded) {
+        if (timerActive === 'w') {
+            $('#countdown-white').addClass('timer-ended');
+        } else if (timerActive === 'b') {
+            $('#countdown-black').addClass('timer-ended');
+        }
+    } else {
+        if (timerActive === 'w') {
+            $('#countdown-white').addClass('timer-active');
+        } else if (timerActive === 'b') {
+            $('#countdown-black').addClass('timer-active');
+        }
+    }
+}
+
+function startTimerFor(turn) {
+    clearInterval(timerInterval);
+    timerActive = turn;
+    updateTimerDisplays();
+    if (timerEnded) return;
+    timerInterval = setInterval(function() {
+        if (timerEnded) {
+            clearInterval(timerInterval);
+            return;
+        }
+        if (timerActive === 'w') {
+            timerWhite--;
+            if (timerWhite <= 0) {
+                timerWhite = 0;
+                timerEnded = true;
+                updateTimerDisplays();
+                declareTimeoutWinner('b');
+                clearInterval(timerInterval);
+                return;
+            }
+        } else if (timerActive === 'b') {
+            timerBlack--;
+            if (timerBlack <= 0) {
+                timerBlack = 0;
+                timerEnded = true;
+                updateTimerDisplays();
+                declareTimeoutWinner('w');
+                clearInterval(timerInterval);
+                return;
+            }
+        }
+        updateTimerDisplays();
+    }, 1000);
+}
+
+function declareTimeoutWinner(winnerColor) {
+    var winner = winnerColor === 'w' ? 'White' : 'Black';
+    setStatus('Time out! ' + winner + ' wins.');
+    timerEnded = true;
+    stopTimers();
+    // Disable board interaction after timeout
+    if (board && typeof board.draggable === "function") {
+        board.draggable = false;
+    }
+    // Remove all event handlers for dragging
+    if (board && board.widget && typeof board.widget === "object") {
+        board.widget.draggable = false;
+    }
+    // Optionally, you can disable further moves here.
+}
+
+function stopTimers() {
+    clearInterval(timerInterval);
+    timerActive = null;
+    updateTimerDisplays();
+}
+
+// Handle timer input and set button
+$(document).ready(function() {
+    $('#setTimerBtn').on('click', function() {
+        var val = parseInt($('#timerInput').val(), 10);
+        if (isNaN(val) || val < 1) val = 60;
+        timerSeconds = val;
+        // Always start a new game when timer is updated
+        newGame();
+    });
+    // Initialize timers on page load
+    resetTimers(timerSeconds);
+    updateTimerDisplays();
+    // Do NOT start timer here; wait for first white move
+});
 
 var updateStatus = function() {
   var status = '';
@@ -156,6 +284,15 @@ var updateStatus = function() {
   statusEl.html(status);
   fenEl.html(game.fen());
   pgnEl.html(game.pgn());
+
+  // Timer logic: only run timer if started and not ended
+  if (game.game_over() || timerEnded) {
+      stopTimers();
+  } else if (timerStarted) {
+      startTimerFor(game.turn());
+  } else {
+      stopTimers();
+  }
 };
 
 var cfg = {
@@ -176,14 +313,15 @@ var randomResponse = function() {
 }
 
 var getResponseMove = function() {
+    // Prevent computer move after timeout
+    if (timerEnded) return;
     var e = document.getElementById("sel1");
     var depth = e.options[e.selectedIndex].value;
     fen = game.fen()
     $.get($SCRIPT_ROOT + "/move/" + depth + "/" + fen, function(data) {
+        if (timerEnded) return; // Prevent move if timeout occurred during request
         game.move(data, {sloppy: true});
         updateStatus();
-        // This is terrible and I should feel bad. Find some way to fix this properly.
-        // The animations would stutter when moves were returned too quick, so I added a 100ms delay before the animation
         setTimeout(function(){ board.position(game.fen()); }, 100);
     })
 }
@@ -248,6 +386,7 @@ var setStatus = function(status) {
 }
 
 var takeBack = function() {
+    if (timerEnded) return; // Prevent takeback after timeout
     game.undo();
     if (game.turn() != "w") {
         game.undo();
@@ -262,6 +401,7 @@ var newGame = function() {
     $('.king-in-check').removeClass('king-in-check');
     $('#captured-white').empty();
     $('#captured-black').empty();
+    resetTimers(timerSeconds);
     updateStatus();
 }
 

@@ -327,13 +327,13 @@ body {
     gap: 1rem !important;
     justify-content: flex-start;
     width: 100%;
-    min-width: 320px;
+    min-width: 220px;
     max-width: 100%;
 }
 
 /* Ensure buttons take up enough space and don't overlap */
 #controls .btn-chess-lightgreen {
-    min-width: 160px;
+    min-width: 130px;
     margin-bottom: 0.5rem;
     flex: 1 1 160px;
 }
@@ -536,6 +536,191 @@ body {
          2px -2px 0 #000,
         -2px  2px 0 #000,
          2px  2px 0 #000;
+}
+
+.timer-box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background: #1B263B;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin-bottom: 14px;
+    font-size: 1.18rem;
+    font-family: 'Segoe UI', 'Arial Black', 'Arial', sans-serif;
+    font-weight: bold;
+    min-width: 100px;
+    box-shadow: 0 2px 8px rgba(30,40,60,0.08);
+    border: 2px solid #3E5C76;
+    gap: 12px;
+    justify-content: flex-end;
+    min-width: 170px;
+    max-width: 170px;
+    height: 52px !important;
+    padding: 0.7rem 1.8rem;
+    box-sizing: border-box;
+}
+
+.timer-label {
+    margin-right: 10px;
+    font-size: 1.1rem;
+    color: #A8DADC;
+    letter-spacing: 1px;
+}
+
+.timer-countdown {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #fff;
+    min-width: 38px;
+    text-align: right;
+    letter-spacing: 1px;
+}
+
+.timer-active {
+    color: #e53935 !important;
+    text-shadow: 0 0 6px #e57373, 0 0 2px #fff;
+}
+
+.timer-ended {
+    color: #b71c1c !important;
+    text-shadow: 0 0 8px #e57373;
+}
+
+#navbar-timer-group {
+    position: absolute;
+    right: 340px; /* shifted more to the left */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+}
+
+#navbar-timers-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-start;
+    margin: 18px 0 0 0;
+}
+
+.timer-box {
+    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(62, 92, 118, 0.10), 0 2px 4px rgba(0,0,0,0.06);
+    padding: 0.7rem 1.2rem;
+    font-size: 1.08rem;
+    letter-spacing: 0.5px;
+    min-width: 110px;
+    min-height: 44px;
+    height: 44px;
+    display: flex;
+    flex-direction: row; /* side by side text */
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    box-sizing: border-box;
+    transition: box-shadow 0.08s, background 0.15s;
+    gap: 8px;
+}
+
+.navbar .timer-label {
+    font-size: 1.05rem;
+    color: #A8DADC;
+    letter-spacing: 1px;
+    font-family: 'Segoe UI', 'Arial Black', 'Arial', sans-serif;
+    font-weight: 600;
+    text-shadow: 0 0 2px #000;
+    margin: 0 6px 0 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.navbar .timer-countdown {
+    font-family: 'Consolas', 'monospace', 'Arial Black', Arial, sans-serif;
+    font-size: 1.45rem;
+    font-weight: bold;
+    color: #fff;
+    background: transparent;
+    border-radius: 6px;
+    padding: 0 8px;
+    min-width: 38px;
+    text-align: center;
+    letter-spacing: 2px;
+    box-shadow: none;
+    margin: 0;
+    text-shadow: 0 0 2px #000;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#timerInput {
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
+    border-radius: 8px;
+    border: none;
+    padding: 0.7rem 1.1rem;
+    font-size: 1.08rem;
+    font-weight: bold;
+    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(62, 92, 118, 0.10), 0 2px 4px rgba(0,0,0,0.06);
+    letter-spacing: 0.5px;
+    margin: 0 0.5rem 0 0;
+    text-align: center;
+    text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
+    transition: box-shadow 0.08s, background 0.15s;
+    height: 44px;
+    box-sizing: border-box;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#timerInput:focus {
+    outline: none;
+    background: linear-gradient(180deg, #A8DADC 0%, #3E5C76 100%);
+    color: #222;
+    box-shadow: 0 0 0 0.2rem rgba(62,92,118,.15);
+}
+
+#setTimerBtn {
+    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(62, 92, 118, 0.10), 0 2px 4px rgba(0,0,0,0.06);
+    padding: 0.7rem 1.8rem;
+    font-size: 1.08rem;
+    letter-spacing: 0.5px;
+    min-width: 120px;
+    height: 44px;
+    margin: 0 0.5rem 0 0;
+    transition: box-shadow 0.08s, background 0.15s;
+    text-shadow:    
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#setTimerBtn:focus,
+#setTimerBtn:hover {
+    background: linear-gradient(180deg, #A8DADC 0%, #3E5C76 100%);
+    color: #222;
+    box-shadow: 0 0 0 0.2rem rgba(62,92,118,.15);
 }
 
 
