@@ -565,14 +565,16 @@ body {
 .timer-label {
     margin-right: 10px;
     font-size: 1.1rem;
-    color: #A8DADC;
+    color: #fafafa;
     letter-spacing: 1px;
+    -webkit-text-stroke: 1px #000;
+    text-stroke: 1px #000;
 }
 
 .timer-countdown {
     font-size: 1.3rem;
     font-weight: bold;
-    color: #fff;
+    color: #6fd07e;
     min-width: 38px;
     text-align: right;
     letter-spacing: 1px;
@@ -607,9 +609,9 @@ body {
 }
 
 .timer-box {
-    background: linear-gradient(180deg, #3E5C76 0%, #3E5C76 100%);
-    color: #fff;
-    border: none;
+    background: linear-gradient(180deg, #4c4d4d 0%, #3e3f3f 100%);
+    color: #f7f8fc;
+    border: 7px solid #2f4060;
     border-radius: 8px;
     font-weight: bold;
     box-shadow: 0 4px 12px rgba(62, 92, 118, 0.10), 0 2px 4px rgba(0,0,0,0.06);
