@@ -39,6 +39,8 @@ var onDrop = function(source, target) {
       if (move.color === 'w') {
           timerStarted = true;
           startTimerFor('b');
+          // Start game timer on first white move
+          startGameTimer();
       }
   } else {
       // Normal timer switching
@@ -114,6 +116,8 @@ function resetTimers(seconds) {
     timerBlack = seconds;
     timerEnded = false;
     timerStarted = false;
+    timerActive = null; // <-- Add this line to ensure no timer is active
+    clearInterval(timerInterval); // <-- Stop any running timer
     updateTimerDisplays();
 }
 
@@ -177,21 +181,52 @@ function declareTimeoutWinner(winnerColor) {
     setStatus('Time out! ' + winner + ' wins.');
     timerEnded = true;
     stopTimers();
+    stopGameTimer(); // <-- Already present, but keep for clarity
     // Disable board interaction after timeout
     if (board && typeof board.draggable === "function") {
         board.draggable = false;
     }
-    // Remove all event handlers for dragging
     if (board && board.widget && typeof board.widget === "object") {
         board.widget.draggable = false;
     }
-    // Optionally, you can disable further moves here.
+    // Ensure game timer is stopped after timeout
+    stopGameTimer();
 }
 
-function stopTimers() {
-    clearInterval(timerInterval);
-    timerActive = null;
-    updateTimerDisplays();
+// Game timer logic
+var gameTimerInterval = null;
+var gameTimerSeconds = 0;
+
+function resetGameTimer() {
+    clearInterval(gameTimerInterval);
+    gameTimerSeconds = 0;
+    updateGameTimerDisplay();
+}
+
+function startGameTimer() {
+    clearInterval(gameTimerInterval);
+    // Only start if not ended
+    if (timerEnded) return;
+    gameTimerInterval = setInterval(function() {
+        // Stop if timeout or game over
+        if (timerEnded || game.game_over()) {
+            clearInterval(gameTimerInterval);
+            return;
+        }
+        gameTimerSeconds++;
+        updateGameTimerDisplay();
+    }, 1000);
+}
+
+function stopGameTimer() {
+    clearInterval(gameTimerInterval);
+}
+
+function updateGameTimerDisplay() {
+    var min = Math.floor(gameTimerSeconds / 60);
+    var sec = gameTimerSeconds % 60;
+    var str = min + ':' + (sec < 10 ? '0' : '') + sec;
+    $('#countup-game').text(str);
 }
 
 // Handle timer input and set button
@@ -206,6 +241,8 @@ $(document).ready(function() {
     // Initialize timers on page load
     resetTimers(timerSeconds);
     updateTimerDisplays();
+    resetGameTimer();
+    updateGameTimerDisplay();
     // Do NOT start timer here; wait for first white move
 });
 
@@ -241,11 +278,15 @@ var updateStatus = function() {
     if (kingSquare) {
       $('.square-' + kingSquare).addClass('king-in-check square-king-in-check');
     }
+    // Stop game timer on checkmate
+    stopGameTimer();
   }
 
   // draw?
   else if (game.in_draw() === true) {
     status = 'Game over, drawn position';
+    // Optionally stop game timer on draw as well
+    stopGameTimer();
   }
 
   // game still on
@@ -288,6 +329,7 @@ var updateStatus = function() {
   // Timer logic: only run timer if started and not ended
   if (game.game_over() || timerEnded) {
       stopTimers();
+      stopGameTimer(); // <-- Stop game timer on game over or timeout
   } else if (timerStarted) {
       startTimerFor(game.turn());
   } else {
@@ -401,7 +443,8 @@ var newGame = function() {
     $('.king-in-check').removeClass('king-in-check');
     $('#captured-white').empty();
     $('#captured-black').empty();
-    resetTimers(timerSeconds);
+    resetTimers(timerSeconds); // <-- This now ensures timer does NOT start automatically
+    resetGameTimer();
     updateStatus();
 }
 
