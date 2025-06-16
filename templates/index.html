@@ -96,8 +96,27 @@
                 </thead>
             </table>
         </div>
-        <!-- Timers group below the table, stacked vertically -->
-    <div id="secondwindow-timers-group" style="display: flex; flex-direction: column; gap: 32px; align-items: center; margin: 0 0 0 0;">
+        <!-- Move timers below the table -->
+        <div id="controls">
+            <form class="row g-2 m-0 p-0">
+                <div class="d-flex gap-2 mb-2">
+                    <!-- <button type="button" class="btn btn-chess-blue" id="backBtn" onclick="takeBack()">Undo Last Move</button> -->
+                    <button type="button" class="btn btn-chess-blue" id="reset" onclick="newGame()">New Game</button>
+                </div>
+                <div>
+                    <select class="form-select chess-select" id="sel1">
+                        <option value="5">Depth: 5</option>
+                        <option value="4">Depth: 4</option>
+                        <option value="3">Depth: 3</option>
+                        <option value="2">Depth: 2</option>
+                        <option value="1">Depth: 1</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Timers group below the table and controls -->
+    <div id="secondwindow-timers-group" style="display: flex; flex-direction: column; gap: 32px; align-items: flex-start; margin: 28px 0 0 0;">
         <div id="timer-white" class="timer-box">
             <span class="timer-label">White</span>
             <span id="countdown-white" class="timer-countdown">60</span>
@@ -110,24 +129,6 @@
         <div  id="timer-game" class="timer-box" style="margin-top: 8px;">
             <span class="timer-label">Game Time</span>
             <span style="color: yellow;" id="countup-game" class="timer-countdown">0:00</span>
-        </div>
-    </div>
-    <div id="controls">
-            <form class="row g-2 m-0 p-0">
-                <div class="d-flex gap-2 mb-2">
-                    <!-- <button type="button" class="btn btn-chess-blue" id="backBtn" onclick="takeBack()">Undo Last Move</button> -->
-                    <button type="button" class="btn btn-chess-blue" id="reset" onclick="newGame()">Start New Game</button>
-                </div>
-                <div>
-                    <select class="form-select chess-select" id="sel1">
-                        <option value="5">Depth: 5</option>
-                        <option value="4">Depth: 4</option>
-                        <option value="3">Depth: 3</option>
-                        <option value="2">Depth: 2</option>
-                        <option value="1">Depth: 1</option>
-                    </select>
-                </div>
-            </form>
         </div>
     </div>
 </div>

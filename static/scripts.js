@@ -47,7 +47,8 @@ var onDrop = function(source, target) {
       startTimerFor(game.turn());
   }
 
-  updateStatus();
+  // Do NOT call updateStatus() here!
+  // updateStatus();
   getResponseMove();
 };
 
@@ -278,14 +279,16 @@ var updateStatus = function() {
     if (kingSquare) {
       $('.square-' + kingSquare).addClass('king-in-check square-king-in-check');
     }
-    // Stop game timer on checkmate
+    // Stop game timer and both player timers on checkmate
+    stopTimers();
     stopGameTimer();
   }
 
   // draw?
   else if (game.in_draw() === true) {
     status = 'Game over, drawn position';
-    // Optionally stop game timer on draw as well
+    // Stop all timers on draw as well
+    stopTimers();
     stopGameTimer();
   }
 
@@ -363,11 +366,17 @@ var getResponseMove = function() {
     $.get($SCRIPT_ROOT + "/move/" + depth + "/" + fen, function(data) {
         if (timerEnded) return; // Prevent move if timeout occurred during request
         game.move(data, {sloppy: true});
-        updateStatus();
-        setTimeout(function(){ board.position(game.fen()); }, 100);
+        setTimeout(function(){
+            board.position(game.fen());
+            updateStatus();
+        }, 100);
     })
 }
 
+// Add this utility if not already present
+function stopTimers() {
+    clearInterval(timerInterval);
+}
 
 // did this based on a stackoverflow answer
 // http://stackoverflow.com/questions/29493624/cant-display-board-whereas-the-id-is-same-when-i-use-chessboard-js
