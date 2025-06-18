@@ -261,11 +261,10 @@ class Engine:
             return move_sequence, best_score
 
     def calculate_minimax(self, depth):
-        # This shows up true for white & false for black
         maximiser = self.board.turn
-
         best_move, best_score = self.minimax(depth, None, maximiser)
-
+        if best_move is None:
+            return ""
         return str(best_move)
 
 

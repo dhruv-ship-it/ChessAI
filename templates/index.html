@@ -54,8 +54,8 @@
               AI CHESS  
           </span>
           <div id="navbar-timer-group">
-        <label for="timerInput" style="color:#fff; font-weight:bold; margin-bottom:0; font-size:1rem;">Time (sec):</label>
-        <input id="timerInput" type="number" min="1" value="60">
+        <label for="timerInput" style="color:#fff; font-weight:bold; margin-bottom:0; font-size:1rem;">Time (hh:mm:ss):</label>
+        <input id="timerInput" type="text" pattern="^(\d{1,2}:)?[0-5]?\d:[0-5]\d$" value="00:01:00" placeholder="hh:mm:ss">
         <button id="setTimerBtn" type="button">Set</button>
       </div>
       <div style="position: absolute; right: 32px;">
@@ -100,7 +100,7 @@
         <div id="controls">
             <form class="row g-2 m-0 p-0">
                 <div class="d-flex gap-2 mb-2">
-                    <!-- <button type="button" class="btn btn-chess-blue" id="backBtn" onclick="takeBack()">Undo Last Move</button> -->
+                    <button type="button" class="btn btn-chess-blue" id="backBtn" onclick="takeBack()">Undo Last Move</button>
                     <button type="button" class="btn btn-chess-blue" id="reset" onclick="newGame()">New Game</button>
                 </div>
                 <div>
@@ -110,6 +110,12 @@
                         <option value="3">Depth: 3</option>
                         <option value="2">Depth: 2</option>
                         <option value="1">Depth: 1</option>
+                    </select>
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <select class="form-select chess-select" id="algoSelect">
+                        <option value="ab" selected>Alpha-Beta Pruning</option>
+                        <option value="minimax">Minimax</option>
                     </select>
                 </div>
             </form>

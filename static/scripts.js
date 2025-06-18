@@ -19,6 +19,26 @@ var onDragStart = function(source, piece, position, orientation) {
   }
 };
 
+// Track move times and details
+var moveTimes = [];
+var lastMoveTimestamp = null;
+
+// Utility to format seconds as hh:mm:ss
+function formatTime(secs) {
+    var h = Math.floor(secs / 3600);
+    var m = Math.floor((secs % 3600) / 60);
+    var s = secs % 60;
+    return (h > 0 ? h + ':' : '') +
+           (h > 0 ? (m < 10 ? '0' : '') : '') + m + ':' +
+           (s < 10 ? '0' : '') + s;
+}
+
+// Reset move times on new game
+function resetMoveTimes() {
+    moveTimes = [];
+    lastMoveTimestamp = null;
+}
+
 var onDrop = function(source, target) {
   // Prevent move if timeout/game ended
   if (timerEnded) {
@@ -34,6 +54,22 @@ var onDrop = function(source, target) {
   // illegal move
   if (move === null) return 'snapback';
 
+  // Track move time for white
+  var now = Date.now();
+  if (lastMoveTimestamp === null) lastMoveTimestamp = now;
+  var elapsed = Math.floor((now - lastMoveTimestamp) / 1000);
+  lastMoveTimestamp = now;
+
+  // Store move details for table
+  var moveNum = Math.ceil(game.history().length / 2);
+  if (!moveTimes[moveNum - 1]) moveTimes[moveNum - 1] = {};
+  moveTimes[moveNum - 1].white = {
+      from: move.from.toUpperCase(),
+      to: move.to.toUpperCase(),
+      san: move.san,
+      time: elapsed
+  };
+
   // Start timer only after white's first move
   if (!timerStarted) {
       if (move.color === 'w') {
@@ -47,8 +83,6 @@ var onDrop = function(source, target) {
       startTimerFor(game.turn());
   }
 
-  // Do NOT call updateStatus() here!
-  // updateStatus();
   getResponseMove();
 };
 
@@ -117,14 +151,14 @@ function resetTimers(seconds) {
     timerBlack = seconds;
     timerEnded = false;
     timerStarted = false;
-    timerActive = null; // <-- Add this line to ensure no timer is active
-    clearInterval(timerInterval); // <-- Stop any running timer
+    timerActive = null;
+    clearInterval(timerInterval);
     updateTimerDisplays();
 }
 
 function updateTimerDisplays() {
-    $('#countdown-white').text(timerWhite);
-    $('#countdown-black').text(timerBlack);
+    $('#countdown-white').text(formatTime(timerWhite));
+    $('#countdown-black').text(formatTime(timerBlack));
     $('#countdown-white').removeClass('timer-active timer-ended');
     $('#countdown-black').removeClass('timer-active timer-ended');
     if (timerEnded) {
@@ -233,10 +267,10 @@ function updateGameTimerDisplay() {
 // Handle timer input and set button
 $(document).ready(function() {
     $('#setTimerBtn').on('click', function() {
-        var val = parseInt($('#timerInput').val(), 10);
-        if (isNaN(val) || val < 1) val = 60;
-        timerSeconds = val;
-        // Always start a new game when timer is updated
+        var val = $('#timerInput').val();
+        var seconds = parseTimeInput(val);
+        if (isNaN(seconds) || seconds < 1) seconds = 60;
+        timerSeconds = seconds;
         newGame();
     });
     // Initialize timers on page load
@@ -244,8 +278,30 @@ $(document).ready(function() {
     updateTimerDisplays();
     resetGameTimer();
     updateGameTimerDisplay();
-    // Do NOT start timer here; wait for first white move
+    // Set timer input display to hh:mm:ss format
+    $('#countdown-white').text(formatTime(timerWhite));
+    $('#countdown-black').text(formatTime(timerBlack));
+    // Set default input value to 00:01:00 if empty
+    if (!$('#timerInput').val()) $('#timerInput').val('00:01:00');
 });
+
+// Utility: Parse hh:mm:ss or mm:ss or ss to seconds
+function parseTimeInput(str) {
+    if (!str) return 60;
+    var parts = str.split(':').map(Number);
+    if (parts.some(isNaN)) return 60;
+    if (parts.length === 3) {
+        // hh:mm:ss
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2) {
+        // mm:ss
+        return parts[0] * 60 + parts[1];
+    } else if (parts.length === 1) {
+        // ss
+        return parts[0];
+    }
+    return 60;
+}
 
 var updateStatus = function() {
   var status = '';
@@ -362,12 +418,28 @@ var getResponseMove = function() {
     if (timerEnded) return;
     var e = document.getElementById("sel1");
     var depth = e.options[e.selectedIndex].value;
+    var algo = document.getElementById("algoSelect").value; // <-- Get selected algorithm
     fen = game.fen()
-    $.get($SCRIPT_ROOT + "/move/" + depth + "/" + fen, function(data) {
+    var moveStart = Date.now();
+    $.get($SCRIPT_ROOT + "/move/" + depth + "/" + algo + "/" + fen, function(data) {
         if (timerEnded) return; // Prevent move if timeout occurred during request
-        game.move(data, {sloppy: true});
+        var move = game.move(data, {sloppy: true});
         setTimeout(function(){
             board.position(game.fen());
+            // Track move time for black
+            var now = Date.now();
+            var elapsed = Math.floor((now - lastMoveTimestamp) / 1000);
+            lastMoveTimestamp = now;
+            var moveNum = Math.ceil(game.history().length / 2);
+            if (!moveTimes[moveNum - 1]) moveTimes[moveNum - 1] = {};
+            if (move) {
+                moveTimes[moveNum - 1].black = {
+                    from: move.from.toUpperCase(),
+                    to: move.to.toUpperCase(),
+                    san: move.san,
+                    time: elapsed
+                };
+            }
             updateStatus();
         }, 100);
     })
@@ -393,38 +465,21 @@ var setPGN = function() {
 }
 
 var createTable = function() {
-
-    var pgn = game.pgn().split(" ");
-    var data = [];
-
-    for (i = 0; i < pgn.length; i += 3) {
-        var index = i / 3;
-        data[index] = {};
-        for (j = 0; j < 3; j++) {
-            var label = "";
-            if (j === 0) {
-                label = "moveNumber";
-            } else if (j === 1) {
-                label = "whiteMove";
-            } else if (j === 2) {
-                label = "blackMove";
-            }
-            if (pgn.length > i + j) {
-                data[index][label] = pgn[i + j];
-            } else {
-                data[index][label] = "";
-            }
-        }
-    }
-
+    // Use moveTimes to build the table
     $('#pgn tr').not(':first').remove();
     var html = '';
-    for (var i = 0; i < data.length; i++) {
-        html += '<tr><td>' + data[i].moveNumber + '</td><td>'
-        + data[i].whiteMove + '</td><td>'
-        + data[i].blackMove + '</td></tr>';
+    for (var i = 0; i < moveTimes.length; i++) {
+        var moveNum = i + 1;
+        var white = moveTimes[i].white
+            ? (white = moveTimes[i].white.from + '→' + moveTimes[i].white.to +
+                (moveTimes[i].white.time !== undefined ? ' <span style="color:#888;font-size:0.95em;">(' + formatTime(moveTimes[i].white.time) + ')</span>' : ''))
+            : '';
+        var black = moveTimes[i].black
+            ? (black = moveTimes[i].black.from + '→' + moveTimes[i].black.to +
+                (moveTimes[i].black.time !== undefined ? ' <span style="color:#888;font-size:0.95em;">(' + formatTime(moveTimes[i].black.time) + ')</span>' : ''))
+            : '';
+        html += '<tr><td>' + moveNum + '</td><td>' + white + '</td><td>' + black + '</td></tr>';
     }
-
     $('#pgn tr').first().after(html);
 }
 
@@ -454,6 +509,7 @@ var newGame = function() {
     $('#captured-black').empty();
     resetTimers(timerSeconds); // <-- This now ensures timer does NOT start automatically
     resetGameTimer();
+    resetMoveTimes();
     updateStatus();
 }
 

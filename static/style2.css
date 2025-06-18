@@ -576,9 +576,9 @@ body {
 }
 
 #timerInput {
-    width: 90px;
-    min-width: 90px;
-    max-width: 90px;
+    width: 160px;
+    /* min-width: 90px;
+    max-width: 90px; */
     border-radius: 8px;
     border: none;
     padding: 0.7rem 1.1rem;

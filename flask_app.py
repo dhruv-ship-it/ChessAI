@@ -8,12 +8,16 @@ def index():
     return render_template("index.html")
 
 
-@app.route('/move/<int:depth>/<path:fen>/')
-def get_move(depth, fen):
-    print(depth)
+@app.route('/move/<int:depth>/<algo>/<path:fen>/')
+def get_move(depth, algo, fen):
+    print(depth, algo)
     print("Calculating...")
     engine = Engine(fen)
-    move = engine.iterative_deepening(depth - 1)
+    move = ""
+    if algo == "minimax":
+        move = engine.calculate_minimax(depth - 1)
+    else:
+        move = engine.iterative_deepening(depth - 1)
     print("Move found!", move)
     print()
     return move
