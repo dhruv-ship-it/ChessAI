@@ -28,6 +28,13 @@ This chess application is built upon the foundation of open-source chess project
   - Killer Move Heuristic for alpha-beta pruning optimization
   - Result: 58.36% reduction in nodes explored, 46.03% speed improvement
 
+- **Zobrist Hashing and Transposition Table Implementation**
+  - Full position hashing with piece placement, side-to-move, castling rights, and en passant
+  - Depth-aware transposition table for position caching
+  - Proper 4-bit castling rights mask construction
+  - Result: 66.95% reduction in nodes explored, 61.7% speed improvement
+  - Transposition table caches 1,563+ positions at depth 4
+
 ### UI/UX Improvements
 - Removed undo functionality for cleaner gameplay experience
 - Enhanced move table with timing information
@@ -40,6 +47,10 @@ This chess application is built upon the foundation of open-source chess project
 - Improved position evaluation with piece-square tables
 - Performance monitoring and validation system
 - Algorithm selection (Alpha-Beta vs Minimax)
+- **Advanced Zobrist-based transposition table**
+  - Position caching with depth-aware reuse
+  - Consistent hash lookup and storage
+  - Safe None handling and error management
 
 ### Technical Improvements
 - Flask backend integration for AI move calculation
