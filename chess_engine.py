@@ -25,8 +25,8 @@ class Engine:
         }
         self.square_table = square_table = {
             1: [
-                0, 0, 0, 0, 0, 0, 0, 0,
-                50, 50, 50, 50, 50, 50, 50, 50,
+                0, 0, 0, 0, 0, 0, 0,
+                50, 50, 50, 50, 50, 50, 50,
                 10, 10, 20, 30, 30, 20, 10, 10,
                 5, 5, 10, 25, 25, 10, 5, 5,
                 0, 0, 0, 20, 20, 0, 0, 0,
@@ -42,21 +42,25 @@ class Engine:
                 -30, 0, 15, 20, 20, 15, 0, -30,
                 -30, 5, 10, 15, 15, 10, 5, -30,
                 -40, -20, 0, 5, 5, 0, -20, -40,
-                -50, -40, -30, -30, -30, -30, -40, -50,
+                -50, -40, -30, -30, -30, -40, -50,
             ],
             3: [
                 -20, -10, -10, -10, -10, -10, -10, -20,
                 -10, 0, 0, 0, 0, 0, 0, -10,
                 -10, 0, 5, 10, 10, 5, 0, -10,
-                -10, 5, 5, 10, 10, 5, 5, -10,
+                -10, 5, 5, 10, 10, 5, 0, -10,
                 -10, 0, 10, 10, 10, 10, 0, -10,
-                -10, 10, 10, 10, 10, 10, 10, -10,
-                -10, 5, 0, 0, 0, 0, 5, -10,
+                -10, 5, 0, 5, 5, 5, 0, -10,
+                -10, 0, 5, 10, 10, 10, 10, 10, -10,
+                -10, 5, 0, 5, 5, 5, 0, -10,
+                -10, 0, 5, 10, 10, 10, 10, 0, -10,
                 -20, -10, -10, -10, -10, -10, -10, -20,
             ],
             4: [
                 0, 0, 0, 0, 0, 0, 0, 0,
                 5, 10, 10, 10, 10, 10, 10, 5,
+                -5, 0, 0, 0, 0, 0, 0, -5,
+                -5, 0, 0, 0, 0, 0, 0, -5,
                 -5, 0, 0, 0, 0, 0, 0, -5,
                 -5, 0, 0, 0, 0, 0, 0, -5,
                 -5, 0, 0, 0, 0, 0, 0, -5,
@@ -70,9 +74,14 @@ class Engine:
                 -10, 0, 5, 5, 5, 5, 0, -10,
                 -5, 0, 5, 5, 5, 5, 0, -5,
                 0, 0, 5, 5, 5, 5, 0, -5,
+                0, 0, 5, 5, 5, 5, 0, -5,
+                0, 0, 5, 5, 5, 5, 0, -10,
                 -10, 5, 5, 5, 5, 5, 0, -10,
-                -10, 0, 5, 0, 0, 0, 0, -10,
-                -20, -10, -10, -5, -5, -10, -10, -20
+                -10, 0, 5, 5, 5, 5, 0, -10,
+                -10, 5, 5, 5, 5, 5, 0, -10,
+                -10, 0, 5, 5, 5, 5, 0, -10,
+                -10, 5, 5, 5, 5, 5, 0, -10,
+                -20, -10, -10, -5, -5, -10, -10, -20,
             ],
             6: [
                 -30, -40, -40, -50, -50, -40, -40, -30,
@@ -88,12 +97,63 @@ class Engine:
         self.board.set_fen(fen)
         self.leaves_reached = 0
         self.killer_moves = {}  # Store killer moves per depth
+        
+        # Initialize proper Zobrist hashing for transposition table
+        self.z_piece = {}
+        self.z_side = random.getrandbits(64)
+        self.z_castling = [random.getrandbits(64) for _ in range(16)]
+        self.z_enpassant = [random.getrandbits(64) for _ in range(8)]
+        self.transposition_table = {}
+        self.current_hash = 0
+        self._initialize_zobrist_table()
+        self.current_hash = self.compute_hash()
 
+    def _initialize_zobrist_table(self):
+        """Initialize Zobrist table with random 64-bit integers for each piece/color/square."""
+        for piece_type in range(1, 7):  # 1-6 (pawn to king)
+            self.z_piece[piece_type] = {}
+            for color in range(2):  # 0=black, 1=white
+                self.z_piece[piece_type][color] = {}
+                for square in range(64):  # 0-63 (a1-h8)
+                    self.z_piece[piece_type][color][square] = random.getrandbits(64)
+
+    def compute_hash(self):
+        """Compute hash of current board position."""
+        hash_value = 0
+        
+        # XOR Zobrist values for all pieces on board
+        for piece_type in range(1, 7):  # 1-6 (pawn to king)
+            for color in range(2):  # 0=black, 1=white
+                squares = self.board.pieces(piece_type, color)
+                for square in squares:
+                    hash_value ^= self.z_piece[piece_type][color][square]
+        
+        # XOR side to move
+        if self.board.turn == chess.BLACK:
+            hash_value ^= self.z_side
+        
+        # XOR castling rights (construct 4-bit mask manually)
+        castling_mask = 0
+        if self.board.has_kingside_castling_rights(chess.WHITE):
+            castling_mask |= 1
+        if self.board.has_queenside_castling_rights(chess.WHITE):
+            castling_mask |= 2
+        if self.board.has_kingside_castling_rights(chess.BLACK):
+            castling_mask |= 4
+        if self.board.has_queenside_castling_rights(chess.BLACK):
+            castling_mask |= 8
+        hash_value ^= self.z_castling[castling_mask]
+        
+        # XOR en passant square
+        if self.board.ep_square:
+            file = chess.square_file(self.board.ep_square)
+            hash_value ^= self.z_enpassant[file]
+        
+        return hash_value
 
     def random_response(self):
         response = random.choice(list(self.board.legal_moves))
         return str(response)
-
 
     def material_eval(self):
         score = 0
@@ -103,7 +163,6 @@ class Engine:
             score -= len(self.board.pieces(i, chess.BLACK)) * self.piece_values[i]
 
         return score
-
 
     def position_eval(self):
         score = 0
@@ -121,8 +180,6 @@ class Engine:
                 score -= self.square_table[i][square]
 
         return score
-
-
 
     def minimax(self, depth, move, maximiser):
         if depth == 0:
@@ -161,17 +218,22 @@ class Engine:
 
             return best_move, best_score
 
-
     def alpha_beta(self, depth_neg, depth_pos, move, alpha, beta, prev_moves, maximiser):
 
         move_sequence = []
+
+        # Check transposition table first
+        position_hash = self.compute_hash()
+        if position_hash in self.transposition_table:
+            entry = self.transposition_table[position_hash]
+            if entry["depth"] >= depth_neg:
+                return None, entry["score"]
 
         # check if we're at the final search depth
         if depth_neg == 0:
             # return move, self.material_eval()
             move_sequence.append(move)
             return move_sequence, self.position_eval()
-
 
         moves = self.order_moves_with_heuristics(depth_neg)
 
@@ -197,11 +259,7 @@ class Engine:
             if depth_neg == 4 and not self.board.turn:
                 print(prev_moves[depth_neg - 1])
             if prev_moves[depth_neg - 1] in moves:
-            # if prev_moves[depth_neg - 1] in self.board.legal_moves:
-                # if not self.board.turn:
-                #     print(prev_moves[depth_neg - 1])
                 moves.insert(0, prev_moves[depth_neg - 1])
-
 
         if maximiser:
             for move in moves:
@@ -214,7 +272,10 @@ class Engine:
 
                 # Check whether the new score is better than the best score. If so, replace the best score.
                 if new_score > best_score:
-                    move_sequence = new_sequence
+                    if new_sequence is not None:
+                        move_sequence = new_sequence.copy() if new_sequence else []
+                    else:
+                        move_sequence = []
                     best_score, best_move = new_score, move
 
                 # Check whether the new score is better than the beta. If it is, return and break the loop.
@@ -229,15 +290,27 @@ class Engine:
                         if len(self.killer_moves[depth_neg]) > 2:
                             self.killer_moves[depth_neg].pop(0)
                     
+                    # Store in transposition table
+                    self.transposition_table[position_hash] = {
+                        "depth": depth_neg,
+                        "score": best_score
+                    }
+                    
                     # self.check_against_best(best_move, best_score, depth_pos, True)
+                    if move_sequence is None:
+                        move_sequence = []
                     move_sequence.append(best_move)
                     return move_sequence, best_score
                 # Update alpha - upper bound
                 if new_score > alpha:
                     alpha = new_score
             # return the best of the results
-            # self.check_against_best(best_move, best_score, depth_pos, True)
-            move_sequence.append(best_move)
+            # self.check_against_best(best_move, best_score, depth_pos, False)
+            if move_sequence is None:
+                move_sequence = []
+            if best_move is not None:
+                move_sequence.append(best_move)
+            
             return move_sequence, best_score
 
         if not maximiser:
@@ -265,17 +338,39 @@ class Engine:
                         if len(self.killer_moves[depth_neg]) > 2:
                             self.killer_moves[depth_neg].pop(0)
                     
+                    # Store in transposition table
+                    self.transposition_table[position_hash] = {
+                        "depth": depth_neg,
+                        "score": best_score
+                    }
+                    
                     # self.check_against_best(best_move, best_score, depth_pos, False)
-                    move_sequence.append(best_move)
+                    if best_move is not None:
+                        if move_sequence is None:
+                            move_sequence = []
+                        move_sequence.append(best_move)
                     return move_sequence, best_score
-
                 # update beta - lower bound
                 if new_score < beta:
                     beta = new_score
 
             # return the best of the results
             # self.check_against_best(best_move, best_score, depth_pos, False)
+            if best_move is not None:
+                if move_sequence is None:
+                    move_sequence = []
+                move_sequence.append(best_move)
+            if move_sequence is None:
+                move_sequence = []
             move_sequence.append(best_move)
+            
+            # Store in transposition table if this is the best result for this position
+            if best_score > -10000000 and best_score < 10000000:  # Valid score range
+                self.transposition_table[position_hash] = {
+                    "depth": depth_neg,
+                    "score": best_score
+                }
+            
             return move_sequence, best_score
 
     def calculate_minimax(self, depth):
@@ -285,21 +380,22 @@ class Engine:
             return ""
         return str(best_move)
 
-
     def calculate_ab(self, depth):
         maximiser = self.board.turn
-
-        move_sequence, best_score = self.alpha_beta(depth, 0, None, -10000001, 10000001, None, maximiser)
+        move_sequence, best_score = self.alpha_beta(depth, 0, None, -10000001, 10000001, [], maximiser)
+        
+        # Handle None move_sequence from transposition table
+        if move_sequence is None:
+            return str(move_sequence[-1]) if move_sequence else ""
+        
         for i in range(1, len(move_sequence)):
             print("move", move_sequence[-i])
         return str(move_sequence[-1])
-
 
     def total_leaves(self):
         leaves = self.leaves_reached
         self.leaves_reached = 0
         return leaves
-
 
     def order_moves(self):
         moves = list(self.board.legal_moves)
@@ -351,15 +447,19 @@ class Engine:
         # Return only the moves in sorted order
         return [move for move, score in scored_moves]
 
-
     def iterative_deepening(self, depth):
         # depth_neg, depth_pos, move, alpha, beta, prev_moves, maximiser)
-        move_list, score  = self.alpha_beta(1, 0, None, -10000001, 10000001, None, self.board.turn)
+        move_list, score = self.alpha_beta(1, 0, None, -10000001, 10000001, None, self.board.turn)
         for i in range(2, depth + 1):
             print("Iteration", i)
             move_list, score = self.alpha_beta(i, 0, None, -10000001, 10000001, move_list, self.board.turn)
-        print("Depth calculated:", len(move_list))
-        return str(move_list[-1])
+            if move_list is not None:
+                print("Depth calculated:", len(move_list))
+        
+        # Handle None move_list from transposition table
+        if move_list is not None:
+            return str(move_list[-1])
+        return ""
 
 
 # This is being used for testing at the moment, which is why there is so much commented code.
@@ -369,7 +469,6 @@ if __name__=="__main__":
     fen = "r2qkbr1/ppp1pppp/2n1b2n/8/8/5P2/PPPP2PP/RNB1KBNR b KQq - 0 6"
 
     newengine = Engine(fen)
-
 
     # squares = newengine.board.pieces(1, chess.WHITE)
     # for square in squares:
@@ -397,6 +496,10 @@ if __name__=="__main__":
     print(f"Leaves explored (no ordering): {leaves_without_ordering}")
     print(f"Time taken (no ordering): {time_without_ordering:.4f}s")
     print()
+    
+    # Clear transposition table for fair comparison
+    newengine.transposition_table = {}
+    newengine.leaves_reached = 0
     
     # Restore move ordering
     newengine.order_moves_with_heuristics = original_order_method
@@ -428,9 +531,5 @@ if __name__=="__main__":
     for depth, killers in newengine.killer_moves.items():
         print(f"  Depth {depth}: {len(killers)} killer moves")
     
-    # cProfile.run('newengine.calculate(3)')
-    #
-    # cProfile.run('newengine.calculate_ab(3)')
-
-
-    # print(newengine.board)
+    # Show transposition table statistics
+    print(f"\nTransposition table entries: {len(newengine.transposition_table)} positions")
