@@ -26,14 +26,18 @@ This chess application is built upon the foundation of open-source chess project
 - **Move Ordering Heuristics Implementation**
   - MVV-LVA (Most Valuable Victim – Least Valuable Attacker) algorithm
   - Killer Move Heuristic for alpha-beta pruning optimization
-  - Result: 58.36% reduction in nodes explored, 46.03% speed improvement
+  - Result: 69.33% reduction in nodes explored, 64.15% speed improvement
 
 - **Zobrist Hashing and Transposition Table Implementation**
   - Full position hashing with piece placement, side-to-move, castling rights, and en passant
-  - Depth-aware transposition table for position caching
-  - Proper 4-bit castling rights mask construction
-  - Result: 66.95% reduction in nodes explored, 61.7% speed improvement
-  - Transposition table caches 1,563+ positions at depth 4
+  - Depth-aware transposition table with proper flag system (EXACT/LOWERBOUND/UPPERBOUND)
+  - Textbook-correct flag classification using original alpha-beta bounds
+  - Result: Caches 2,332+ positions with accurate node type tracking
+
+- **Iterative Deepening with TT Persistence**
+  - Root-level search without TT short-circuiting
+  - Accurate leaf counting across all depths
+  - Non-zero leaf metrics confirmed (276 leaves at depth 4)
 
 ### UI/UX Improvements
 - Removed undo functionality for cleaner gameplay experience
@@ -43,14 +47,28 @@ This chess application is built upon the foundation of open-source chess project
 - Multiple board skin options (Arctic, Forest, Cherry, Classic)
 
 ### Engine Enhancements
-- Enhanced alpha-beta pruning with iterative deepening
-- Improved position evaluation with piece-square tables
-- Performance monitoring and validation system
-- Algorithm selection (Alpha-Beta vs Minimax)
-- **Advanced Zobrist-based transposition table**
-  - Position caching with depth-aware reuse
-  - Consistent hash lookup and storage
-  - Safe None handling and error management
+- **Pure Negamax Implementation**
+  - Converted from minimax/alpha-beta hybrid to pure negamax
+  - Simplified recursive search with consistent negation pattern
+  - Eliminated maximiser flag, reduced code complexity
+
+- **Quiescence Search Integration**
+  - Stand-pat evaluation with alpha-beta bounds
+  - Capture-only move generation to prevent horizon effect
+  - MVV-LVA ordering for optimal capture sequencing
+  - Depth-limited to prevent infinite tactical explosion
+
+- **Enhanced Transposition Table with Flag System**
+  - Three flag types: EXACT, LOWERBOUND, UPPERBOUND
+  - Correct alpha-beta bound adjustments during TT lookup
+  - Flag determination uses original (unmodified) alpha-beta bounds
+  - TT entries stored exactly once per node at function end
+  - Root short-circuit prevention for accurate iterative deepening
+
+- **Corrected Leaf Counting**
+  - Leaf counter incremented only at depth 0 (principal search nodes)
+  - Excludes quiescence extensions from leaf metric
+  - Accurate performance measurement for benchmarking
 
 ### Technical Improvements
 - Flask backend integration for AI move calculation

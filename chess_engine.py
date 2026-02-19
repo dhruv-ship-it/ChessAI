@@ -181,6 +181,51 @@ class Engine:
 
         return score
 
+    def quiescence(self, alpha, beta, q_depth=0):
+        """Quiescence search to extend search through forcing capture moves"""
+        MAX_QUIESCENCE_DEPTH = 8
+        
+        if q_depth >= MAX_QUIESCENCE_DEPTH:
+            return self.position_eval()
+        
+        # Step 1: Stand Pat Evaluation
+        stand_pat = self.position_eval()
+        
+        if stand_pat >= beta:
+            return beta
+        if stand_pat > alpha:
+            alpha = stand_pat
+        
+        # Step 2: Generate Only Capture Moves
+        capture_moves = [m for m in self.board.legal_moves if self.board.is_capture(m)]
+        
+        # If no captures, return alpha (not stand_pat!)
+        if not capture_moves:
+            return alpha
+        
+        # Step 3: Order Capture Moves using MVV-LVA logic
+        capture_moves.sort(
+            key=lambda move: (
+                self.piece_values.get(
+                    self.board.piece_at(move.to_square).piece_type, 0
+                ) if self.board.piece_at(move.to_square) else 0
+            ),
+            reverse=True
+        )
+        
+        # Step 4: Recursive Quiescence Search
+        for move in capture_moves:
+            self.board.push(move)
+            score = -self.quiescence(-beta, -alpha, q_depth + 1)
+            self.board.pop()
+            
+            if score >= beta:
+                return beta
+            if score > alpha:
+                alpha = score
+        
+        return alpha
+
     def minimax(self, depth, move, maximiser):
         if depth == 0:
             # return move, self.material_eval()
@@ -218,160 +263,104 @@ class Engine:
 
             return best_move, best_score
 
-    def alpha_beta(self, depth_neg, depth_pos, move, alpha, beta, prev_moves, maximiser):
-
+    def negamax(self, depth, alpha, beta, is_root=False):
+        """Pure negamax implementation with proper TT handling"""
+        
         move_sequence = []
-
-        # Check transposition table first
+        original_alpha = alpha
+        original_beta = beta
+        
+        # Check transposition table first (but not at root)
         position_hash = self.compute_hash()
-        if position_hash in self.transposition_table:
+        if not is_root and position_hash in self.transposition_table:
             entry = self.transposition_table[position_hash]
-            if entry["depth"] >= depth_neg:
-                return None, entry["score"]
+            if entry["depth"] >= depth:
+                if entry["flag"] == "EXACT":
+                    return [], entry["score"]
+                elif entry["flag"] == "LOWERBOUND":
+                    alpha = max(alpha, entry["score"])
+                elif entry["flag"] == "UPPERBOUND":
+                    beta = min(beta, entry["score"])
+                
+                if alpha >= beta:
+                    return [], entry["score"]
 
         # check if we're at the final search depth
-        if depth_neg == 0:
-            # return move, self.material_eval()
-            move_sequence.append(move)
-            return move_sequence, self.position_eval()
+        if depth == 0:
+            self.leaves_reached += 1
+            score = self.quiescence(alpha, beta)
+            return [], score
 
-        moves = self.order_moves_with_heuristics(depth_neg)
+        moves = self.order_moves_with_heuristics(depth)
 
         # if there are no legal moves, check for checkmate / stalemate
         if not moves:
             if self.board.is_checkmate():
                 if self.board.result() == "1-0":
-                    move_sequence.append(move)
-                    return move_sequence, 1000000
-                elif self.board.result() == "0-1":
-                    move_sequence.append(move)
-                    return move_sequence, -1000000
+                    return [], 1000000
+                else:
+                    return [], -1000000
             else:
-                move_sequence.append(move)
-                return move_sequence, 0
+                return [], 0
 
-        # initialise best move variables. What are these used for again? I need to simplify the logic here.
+        # initialise best move variables
         best_move = None
-        best_score = -10000001 if maximiser else 10000001
+        best_score = -float('inf')
 
-        # put the last calculated best move in first place of the list. Hopefully this improves pruning.
-        if prev_moves and len(prev_moves) >= depth_neg:
-            if depth_neg == 4 and not self.board.turn:
-                print(prev_moves[depth_neg - 1])
-            if prev_moves[depth_neg - 1] in moves:
-                moves.insert(0, prev_moves[depth_neg - 1])
-
-        if maximiser:
-            for move in moves:
-                self.leaves_reached += 1
-
-                # get score of the new move, record what it is
-                self.board.push(move)
-                new_sequence, new_score = self.alpha_beta(depth_neg - 1, depth_pos + 1, move, alpha, beta, prev_moves, False)
-                self.board.pop()
-
-                # Check whether the new score is better than the best score. If so, replace the best score.
-                if new_score > best_score:
-                    if new_sequence is not None:
-                        move_sequence = new_sequence.copy() if new_sequence else []
-                    else:
-                        move_sequence = []
-                    best_score, best_move = new_score, move
-
-                # Check whether the new score is better than the beta. If it is, return and break the loop.
-                # Need to rethink the check against best here.
-                if new_score >= beta:
-                    # Store killer move for this depth
-                    if depth_neg not in self.killer_moves:
-                        self.killer_moves[depth_neg] = []
-                    if move not in self.killer_moves[depth_neg]:
-                        self.killer_moves[depth_neg].append(move)
-                        # Keep only top 2 killer moves per depth
-                        if len(self.killer_moves[depth_neg]) > 2:
-                            self.killer_moves[depth_neg].pop(0)
-                    
-                    # Store in transposition table
-                    self.transposition_table[position_hash] = {
-                        "depth": depth_neg,
-                        "score": best_score
-                    }
-                    
-                    # self.check_against_best(best_move, best_score, depth_pos, True)
-                    if move_sequence is None:
-                        move_sequence = []
-                    move_sequence.append(best_move)
-                    return move_sequence, best_score
-                # Update alpha - upper bound
-                if new_score > alpha:
-                    alpha = new_score
-            # return the best of the results
-            # self.check_against_best(best_move, best_score, depth_pos, False)
-            if move_sequence is None:
-                move_sequence = []
-            if best_move is not None:
-                move_sequence.append(best_move)
+        for move in moves:
+            # get score of the new move using negamax
+            self.board.push(move)
+            new_sequence, new_score = self.negamax(depth - 1, -beta, -alpha, False)
+            self.board.pop()
             
-            return move_sequence, best_score
+            score = -new_score
 
-        if not maximiser:
-            for move in moves:
-                self.leaves_reached += 1
-
-                # get score of the new move, record what it is
-                self.board.push(move)
-                new_sequence, new_score = self.alpha_beta(depth_neg - 1, depth_pos + 1, move, alpha, beta, prev_moves, True)
-                self.board.pop()
-
-                # Check whether the new score is better than the best score. If so, replace the best score.
-                if new_score < best_score:
-                    move_sequence = new_sequence
-                    best_score, best_move = new_score, move
-
-                # Check whether the new score is better than the alpha. If it is, return and break the loop
-                if new_score <= alpha:
-                    # Store killer move for this depth
-                    if depth_neg not in self.killer_moves:
-                        self.killer_moves[depth_neg] = []
-                    if move not in self.killer_moves[depth_neg]:
-                        self.killer_moves[depth_neg].append(move)
-                        # Keep only top 2 killer moves per depth
-                        if len(self.killer_moves[depth_neg]) > 2:
-                            self.killer_moves[depth_neg].pop(0)
-                    
-                    # Store in transposition table
-                    self.transposition_table[position_hash] = {
-                        "depth": depth_neg,
-                        "score": best_score
-                    }
-                    
-                    # self.check_against_best(best_move, best_score, depth_pos, False)
-                    if best_move is not None:
-                        if move_sequence is None:
-                            move_sequence = []
-                        move_sequence.append(best_move)
-                    return move_sequence, best_score
-                # update beta - lower bound
-                if new_score < beta:
-                    beta = new_score
-
-            # return the best of the results
-            # self.check_against_best(best_move, best_score, depth_pos, False)
-            if best_move is not None:
-                if move_sequence is None:
+            # Check whether this is the best score
+            if score > best_score:
+                best_score = score
+                best_move = move
+                if new_sequence is not None:
+                    move_sequence = new_sequence.copy() if new_sequence else []
+                else:
                     move_sequence = []
-                move_sequence.append(best_move)
-            if move_sequence is None:
-                move_sequence = []
+
+            # Update alpha
+            alpha = max(alpha, score)
+            
+            # Beta cutoff
+            if alpha >= beta:
+                # Store killer move for this depth
+                if depth not in self.killer_moves:
+                    self.killer_moves[depth] = []
+                if move not in self.killer_moves[depth]:
+                    self.killer_moves[depth].append(move)
+                    # Keep only top 2 killer moves per depth
+                    if len(self.killer_moves[depth]) > 2:
+                        self.killer_moves[depth].pop(0)
+                break
+
+        # Store in transposition table at the END, exactly once per node
+        # Determine flag based on original alpha-beta bounds
+        if best_score <= original_alpha:
+            flag = "UPPERBOUND"
+        elif best_score >= original_beta:
+            flag = "LOWERBOUND"
+        else:
+            flag = "EXACT"
+        
+        self.transposition_table[position_hash] = {
+            "depth": depth,
+            "score": best_score,
+            "flag": flag
+        }
+        
+        # Build move sequence
+        if move_sequence is None:
+            move_sequence = []
+        if best_move is not None:
             move_sequence.append(best_move)
-            
-            # Store in transposition table if this is the best result for this position
-            if best_score > -10000000 and best_score < 10000000:  # Valid score range
-                self.transposition_table[position_hash] = {
-                    "depth": depth_neg,
-                    "score": best_score
-                }
-            
-            return move_sequence, best_score
+        
+        return move_sequence, best_score
 
     def calculate_minimax(self, depth):
         maximiser = self.board.turn
@@ -381,12 +370,11 @@ class Engine:
         return str(best_move)
 
     def calculate_ab(self, depth):
-        maximiser = self.board.turn
-        move_sequence, best_score = self.alpha_beta(depth, 0, None, -10000001, 10000001, [], maximiser)
+        move_sequence, best_score = self.negamax(depth, -float('inf'), float('inf'), is_root=True)
         
         # Handle None move_sequence from transposition table
-        if move_sequence is None:
-            return str(move_sequence[-1]) if move_sequence else ""
+        if not move_sequence:
+            return ""
         
         for i in range(1, len(move_sequence)):
             print("move", move_sequence[-i])
@@ -448,18 +436,20 @@ class Engine:
         return [move for move, score in scored_moves]
 
     def iterative_deepening(self, depth):
-        # depth_neg, depth_pos, move, alpha, beta, prev_moves, maximiser)
-        move_list, score = self.alpha_beta(1, 0, None, -10000001, 10000001, None, self.board.turn)
-        for i in range(2, depth + 1):
+        # Keep TT across iterations but don't allow root short-circuit
+        # TT is cleared at start of new searches only
+        
+        move_list = []
+        for i in range(1, depth + 1):
             print("Iteration", i)
-            move_list, score = self.alpha_beta(i, 0, None, -10000001, 10000001, move_list, self.board.turn)
+            move_list, score = self.negamax(i, -float('inf'), float('inf'), is_root=True)
             if move_list is not None:
                 print("Depth calculated:", len(move_list))
         
         # Handle None move_list from transposition table
-        if move_list is not None:
-            return str(move_list[-1])
-        return ""
+        if not move_list:
+            return ""
+        return str(move_list[-1])
 
 
 # This is being used for testing at the moment, which is why there is so much commented code.
