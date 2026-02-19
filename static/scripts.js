@@ -491,15 +491,6 @@ var setStatus = function(status) {
   document.getElementById("status").innerHTML = status;
 }
 
-var takeBack = function() {
-    if (timerEnded) return; // Prevent takeback after timeout
-    game.undo();
-    if (game.turn() != "w") {
-        game.undo();
-    }
-    board.position(game.fen());
-    updateStatus();
-}
 
 var newGame = function() {
     game.reset();
