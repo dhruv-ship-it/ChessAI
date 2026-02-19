@@ -87,6 +87,7 @@ class Engine:
         }
         self.board.set_fen(fen)
         self.leaves_reached = 0
+        self.killer_moves = {}  # Store killer moves per depth
 
 
     def random_response(self):
@@ -172,8 +173,7 @@ class Engine:
             return move_sequence, self.position_eval()
 
 
-        moves = list(self.board.legal_moves)
-        # moves = self.order_moves()
+        moves = self.order_moves_with_heuristics(depth_neg)
 
         # if there are no legal moves, check for checkmate / stalemate
         if not moves:
@@ -220,6 +220,15 @@ class Engine:
                 # Check whether the new score is better than the beta. If it is, return and break the loop.
                 # Need to rethink the check against best here.
                 if new_score >= beta:
+                    # Store killer move for this depth
+                    if depth_neg not in self.killer_moves:
+                        self.killer_moves[depth_neg] = []
+                    if move not in self.killer_moves[depth_neg]:
+                        self.killer_moves[depth_neg].append(move)
+                        # Keep only top 2 killer moves per depth
+                        if len(self.killer_moves[depth_neg]) > 2:
+                            self.killer_moves[depth_neg].pop(0)
+                    
                     # self.check_against_best(best_move, best_score, depth_pos, True)
                     move_sequence.append(best_move)
                     return move_sequence, best_score
@@ -247,6 +256,15 @@ class Engine:
 
                 # Check whether the new score is better than the alpha. If it is, return and break the loop
                 if new_score <= alpha:
+                    # Store killer move for this depth
+                    if depth_neg not in self.killer_moves:
+                        self.killer_moves[depth_neg] = []
+                    if move not in self.killer_moves[depth_neg]:
+                        self.killer_moves[depth_neg].append(move)
+                        # Keep only top 2 killer moves per depth
+                        if len(self.killer_moves[depth_neg]) > 2:
+                            self.killer_moves[depth_neg].pop(0)
+                    
                     # self.check_against_best(best_move, best_score, depth_pos, False)
                     move_sequence.append(best_move)
                     return move_sequence, best_score
@@ -294,6 +312,45 @@ class Engine:
         sorted_indexes = sorted(range(len(scores)), key=lambda i: scores[i], reverse=False)
         return [moves[i] for i in sorted_indexes]
 
+    def order_moves_with_heuristics(self, depth_neg):
+        """
+        Order moves using MVV-LVA and killer move heuristics for better alpha-beta pruning.
+        """
+        moves = list(self.board.legal_moves)
+        scored_moves = []
+        
+        # Get killer moves for current depth
+        killer_moves = self.killer_moves.get(depth_neg, [])
+        
+        for move in moves:
+            score = 0
+            
+            # Killer move bonus - highest priority
+            if move in killer_moves:
+                score = 1000000  # Very high score for killer moves
+            else:
+                # MVV-LVA scoring for captures
+                if self.board.is_capture(move):
+                    victim_piece = self.board.piece_at(move.to_square)
+                    attacker_piece = self.board.piece_at(move.from_square)
+                    
+                    if victim_piece and attacker_piece:
+                        victim_value = self.piece_values[victim_piece.piece_type]
+                        attacker_value = self.piece_values[attacker_piece.piece_type]
+                        # MVV-LVA: (victim_value * 10) - attacker_value
+                        score = (victim_value * 10) - attacker_value
+                else:
+                    # Non-captures get lower priority
+                    score = 0
+            
+            scored_moves.append((move, score))
+        
+        # Sort by score in descending order (highest score first)
+        scored_moves.sort(key=lambda x: x[1], reverse=True)
+        
+        # Return only the moves in sorted order
+        return [move for move, score in scored_moves]
+
 
     def iterative_deepening(self, depth):
         # depth_neg, depth_pos, move, alpha, beta, prev_moves, maximiser)
@@ -303,7 +360,6 @@ class Engine:
             move_list, score = self.alpha_beta(i, 0, None, -10000001, 10000001, move_list, self.board.turn)
         print("Depth calculated:", len(move_list))
         return str(move_list[-1])
-
 
 
 # This is being used for testing at the moment, which is why there is so much commented code.
@@ -326,20 +382,52 @@ if __name__=="__main__":
     # print(newengine.material_eval())
     # print(newengine.lazy_eval())
 
-    # start_time = time.time()
-    # print(newengine.calculate(3))
-    # print(newengine.total_leaves())
-    # print("Time taken:", time.time() - start_time)
+    # Test WITHOUT move ordering (temporarily disable heuristics)
+    print("=== PERFORMANCE COMPARISON ===")
+    print("Testing WITHOUT move ordering:")
+    
+    # Temporarily replace order_moves_with_heuristics to return unsorted moves
+    original_order_method = newengine.order_moves_with_heuristics
+    newengine.order_moves_with_heuristics = lambda depth: list(newengine.board.legal_moves)
+    
+    start_time = time.time()
+    print("Move (no ordering):", newengine.calculate_ab(4))
+    leaves_without_ordering = newengine.total_leaves()
+    time_without_ordering = time.time() - start_time
+    print(f"Leaves explored (no ordering): {leaves_without_ordering}")
+    print(f"Time taken (no ordering): {time_without_ordering:.4f}s")
+    print()
+    
+    # Restore move ordering
+    newengine.order_moves_with_heuristics = original_order_method
+    
+    print("Testing WITH move ordering (MVV-LVA + Killer Moves):")
+    start_time = time.time()
+    print("Move (with ordering):", newengine.calculate_ab(4))
+    leaves_with_ordering = newengine.total_leaves()
+    time_with_ordering = time.time() - start_time
+    print(f"Leaves explored (with ordering): {leaves_with_ordering}")
+    print(f"Time taken (with ordering): {time_with_ordering:.4f}s")
+    print()
+    
+    # Performance improvement
+    if leaves_without_ordering > 0:
+        improvement = ((leaves_without_ordering - leaves_with_ordering) / leaves_without_ordering) * 100
+        print(f"=== PERFORMANCE IMPROVEMENT ===")
+        print(f"Leaf reduction: {improvement:.2f}% ({leaves_without_ordering - leaves_with_ordering} fewer leaves)")
+        print(f"Speed improvement: {((time_without_ordering - time_with_ordering) / time_without_ordering) * 100:.2f}%")
+    print()
 
     start_time = time.time()
-    print(newengine.calculate_ab(4))
-    print(newengine.total_leaves())
-    print("Time taken:", time.time() - start_time)
-
-    start_time = time.time()
-    print(newengine.iterative_deepening(4))
-    print(newengine.total_leaves())
-    print("Time taken:", time.time() - start_time)
+    print("Iterative deepening result:", newengine.iterative_deepening(4))
+    print("Leaves explored (iterative deepening):", newengine.total_leaves())
+    print("Time taken (iterative deepening):", time.time() - start_time)
+    
+    # Show killer moves statistics
+    print(f"\nKiller moves stored: {len(newengine.killer_moves)} depths")
+    for depth, killers in newengine.killer_moves.items():
+        print(f"  Depth {depth}: {len(killers)} killer moves")
+    
     # cProfile.run('newengine.calculate(3)')
     #
     # cProfile.run('newengine.calculate_ab(3)')
