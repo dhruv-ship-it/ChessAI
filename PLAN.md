@@ -1,5 +1,11 @@
 # Plan — Chess Engine Rebuild
 
+> **ARCHIVED, 2026-10-10.** Work has moved to `D:\projects\Chess-engine`
+> (repo name `Chess-engine`). That repo carries the live `PLAN.md`,
+> `ENGINEERING_NOTES.md` and a `CLAUDE.md` with the decisions and ground rules.
+> This repo is kept only as the audit subject — the broken engine the rebuild was
+> diagnosed from. Do not develop here.
+
 **Decided 2026-10-09.** Supersedes the roadmap in `ENGINEERING_NOTES.md` section 7.
 Read `ENGINEERING_NOTES.md` first for the audit evidence behind every decision here.
 
