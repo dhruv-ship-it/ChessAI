@@ -26,11 +26,74 @@ We do **not** revert-and-stop. Plain alpha-beta with no ordering or TT is a text
 exercise. Move ordering, transposition tables and quiescence are the substance of the
 project and get rebuilt properly.
 
+### What is actually carried over — not a clone
+
+Clarified 2026-10-10. The new repo is **not** a fork or clone of this one. Concretely:
+
+- **Piece values and piece-square tables: carried over as reference data.** These are not the
+  original repo author's invention — they are Tomasz Michniewski's
+  [Simplified Evaluation Function](https://www.chessprogramming.org/Simplified_Evaluation_Function),
+  standard published tables from the Chess Programming Wiki. Using them is like using any
+  standard constant table. (Michniewski's original purpose is a good fit here: he proposed
+  that all engines under test share one simplistic evaluation so that *only search and
+  efficiency* affect the result — which is exactly what the Phase 2 Elo harness measures.)
+  Upgrade path later: [PeSTO's evaluation function](https://chessprogramming.org/PeSTO's_Evaluation_Function),
+  which is tapered midgame/endgame.
+- **The original `alpha_beta` function: not carried over.** It is written as minimax with a
+  `maximiser` flag, has confused PV handling and a dubious `prev_moves` ordering hack, and
+  carries the original author's own comment: *"What are these used for again? I need to
+  simplify the logic here."* Clean negamax is roughly 100 lines and is written fresh.
+- **Board representation, move generation and legality: `python-chess`**, as always. The
+  project never implemented these.
+
+So the amount of inherited *search code* is approximately zero. What carries over is standard
+public evaluation data. This matters for how the work is described: it is an engine built on
+`python-chess` using the standard Simplified Evaluation Function tables, not a modification
+of someone else's engine.
+
+### Consequence: this is a rebuild, not a repair
+
+The four bugs in `ENGINEERING_NOTES.md` section 2.1 do not get "fixed" one by one, because
+the code containing three of them is being discarded. The audit's value is **diagnostic** —
+it tells us precisely what to get right the first time:
+
+- Side-relative scores at every negamax leaf (the bug that broke the engine).
+- `-MATE + ply` at mated nodes, never absolute.
+- `table[square ^ 56]` for White — note this mirroring bug *was* inherited from the original
+  and is the one genuine pre-existing defect.
+- Tables validated as exactly 64 entries by a test, so corruption cannot recur silently.
+
 **New repository.** Not a salvage of this one. This repo keeps committed `.swp` files, two
 near-duplicate Flask apps, `index.html_orig`, stray files named `1` and `3`, no tests, no CI
 and no `requirements.txt`, and its history would read "introduced bugs, then fixed my own
 bugs." The engine is ported across; this repo is archived private.
 **Repo name still to be chosen by the user — do not create it unprompted.**
+
+## Are the features worth building? Yes — verified
+
+Checked 2026-10-10, because the features being rebuilt are the same ones the agent commits
+attempted. **The feature choices were correct; only the implementations were wrong.** These
+are the standard, textbook components of a modern engine — iterative-deepening negamax with
+alpha-beta, quiescence, a transposition table, null-move pruning and late-move reductions —
+and their gains are documented:
+
+| feature | reported gain |
+|---|---|
+| quiescence search | one engine went 1698 → 1937 Elo |
+| transposition table (on top of the above) | 1937 → 1967 Elo |
+| null-move pruning + a simple TT | ≈ +350 Elo (MinimalChess) |
+| probing/storing the TT inside quiescence | +22.9 Elo |
+
+Treat these as order-of-magnitude expectations, not targets — they are other people's engines
+on other hardware. Phase 2 exists precisely so our own numbers are measured rather than
+borrowed.
+
+Comparable finished work, useful as a reference for scope and as proof this is a known-good
+destination: [`MajdHail/chess-engine`](https://github.com/MajdHail/chess-engine) (Python:
+alpha-beta, iterative deepening, TT, quiescence, null-move, LMR, PeSTO eval, UCI, difficulty
+levels) and [`antoine-pz/pychess-engine-tipe`](https://github.com/antoine-pz/pychess-engine-tipe),
+which evaluates its search optimisations via Bayeselo — i.e. the Phase 2 approach is
+established practice, not something invented here.
 
 ## Phases
 
@@ -101,14 +164,32 @@ across resume, commit message and `ATTRIBUTION.md`.
 
 ## Interview narrative
 
-> "I inherited a broken open-source engine. I built a perft and tactical test suite to
-> characterise the failures, traced them to a minimax-to-negamax conversion that had kept
-> absolute scores where negamax requires side-relative ones, plus corrupted piece-square
-> tables. Then I rebuilt the search properly and measured each feature's Elo contribution."
+**Correction, 2026-10-10.** An earlier version of this file said the narrative was "I
+inherited a broken open-source engine." **That is false and must not be used.** The audit
+established the opposite: the original at `38a8d68` scored 12/12 on tactics, found mate at
+every depth, and had all six piece-square tables correct. It worked. The breakage was
+introduced by the three agent-generated commits made in *this* repo
+(`50533e5`, `5d0b77b`, `4f146de`).
 
-This is a debugging and measurement-discipline story, which is stronger than "I wrote a chess
-engine." Provenance is not normally stated on a resume; `ATTRIBUTION.md` carries it in the
-repo and the question gets a straight answer if asked.
+The accurate history is: a working but naive alpha-beta engine, plus three standard
+optimisations added on top that regressed its strength from 12/12 to 5/12.
+
+**For the resume: do not narrate the history at all.** Resume bullets state outcomes, not
+archaeology. Describe the engine as built.
+
+**For an interview, if asked, the honest version is the stronger answer anyway:**
+
+> "I added three standard search optimisations — move ordering, a transposition table and
+> quiescence — and the engine got *weaker*. I built a perft suite and a tactical regression
+> suite to find out why, and traced it to a minimax-to-negamax conversion that had kept
+> absolute White-positive scores where negamax requires side-relative ones, so the engine
+> would not play checkmate as White. I rebuilt the search from a clean base with the tests in
+> place first, then measured each feature's contribution in Elo."
+
+That is a *better* story than "I wrote a chess engine," because it demonstrates measurement
+discipline, regression catching and root-cause analysis. Owning the regression is the point,
+not a liability — shipping an optimisation that silently loses strength is an extremely
+common real-world failure, and most candidates have no story about catching one.
 
 ## Study list for the user (3-4 days, parallel to implementation)
 
